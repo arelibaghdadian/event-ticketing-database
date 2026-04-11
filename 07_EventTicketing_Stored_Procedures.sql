@@ -353,3 +353,73 @@ END;
 GO
 
 PRINT 'All stored procedures have been updated.';
+
+
+
+PRINT 'All stored procedures have been updated.';
+GO
+
+-- ============================================================
+-- 9. usp_Login
+-- ============================================================
+CREATE OR ALTER PROCEDURE usp_Login
+    @email VARCHAR(100),
+    @password VARCHAR(255)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT 
+        u.user_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        u.role,
+        u.registration_date,          -- added this line
+        CASE 
+            WHEN u.role = 'attendee' THEN a.attendee_id
+            ELSE NULL
+        END AS attendee_id,
+        CASE 
+            WHEN u.role = 'organizer' THEN o.organizer_id
+            ELSE NULL
+        END AS organizer_id
+    FROM [User] u
+    LEFT JOIN Attendee a ON u.user_id = a.user_id
+    LEFT JOIN Organizer o ON u.user_id = o.user_id
+    WHERE u.email = @email 
+      AND u.password_hash = @password;   -- plain text compare
+END;
+GO
+
+
+
+-- ============================================================
+-- 9. usp_BrowseEvents
+-- ============================================================
+CREATE OR ALTER PROCEDURE usp_BrowseEvents
+    @status VARCHAR(20) = 'active'   -- optional: filter by status (active, cancelled, completed)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT 
+        e.event_id,
+        e.title,
+        e.description,
+        e.start_date_time,
+        e.end_date_time,
+        e.category_ AS category,
+        e.status,
+        v.name AS venue,              -- venue name from Venue table
+        v.city,
+        v.address AS venue_address,
+        u.first_name + ' ' + u.last_name AS organizer_name
+    FROM Event e
+    INNER JOIN Venue v ON e.venue_id = v.venue_id
+    INNER JOIN Organizer o ON e.organizer_id = o.organizer_id
+    INNER JOIN [User] u ON o.user_id = u.user_id
+    WHERE e.status = @status
+    ORDER BY e.start_date_time ASC;
+END;
+GO

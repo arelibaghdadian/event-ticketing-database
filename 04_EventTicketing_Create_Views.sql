@@ -4,7 +4,7 @@ GO
 -- ============================================================
 -- VIEW 1: Active events with venue details
 -- ============================================================
-CREATE VIEW v_ActiveEvents AS
+CREATE OR ALTER VIEW v_ActiveEvents AS
 SELECT 
     e.event_id,
     e.title,
@@ -21,7 +21,7 @@ GO
 -- ============================================================
 -- VIEW 2: Sales summary per event (paid orders only)
 -- ============================================================
-CREATE VIEW v_EventSales AS
+CREATE OR ALTER VIEW v_EventSales AS
 SELECT 
     e.event_id,
     e.title,
@@ -39,7 +39,7 @@ GO
 -- ============================================================
 -- VIEW 3: Attendee purchase history (with fallback to purchaser name)
 -- ============================================================
-CREATE VIEW v_AttendeeHistory AS
+CREATE OR ALTER VIEW v_AttendeeHistory AS
 SELECT 
     u.user_id,
     u.first_name,
@@ -59,7 +59,7 @@ GO
 -- ============================================================
 -- VIEW 4: Venue utilization (events hosted and total hours booked)
 -- ============================================================
-CREATE VIEW v_VenueUtilization AS
+CREATE OR ALTER VIEW v_VenueUtilization AS
 SELECT 
     v.venue_id,
     v.name,
@@ -74,7 +74,7 @@ GO
 -- ============================================================
 -- VIEW 5: Valid tickets (not used or refunded) with event and attendee names
 -- ============================================================
-CREATE VIEW v_ValidTickets AS
+CREATE OR ALTER VIEW v_ValidTickets AS
 SELECT 
     t.ticket_id,
     t.unique_code_,
@@ -96,11 +96,31 @@ JOIN [User] u ON a.user_id = u.user_id
 WHERE t.status_ = 'valid';
 GO
 
+
+
+-- ============================================================
+-- VIEW 6: EventSummary
+-- ============================================================
+CREATE OR ALTER VIEW EventSummary AS
+SELECT 
+    e.event_id,
+    e.title,
+    e.start_date_time,
+    e.end_date_time,
+    e.status,
+    v.name AS venue_name,
+    v.city,
+    o.organizer_id
+FROM EVENT e
+JOIN VENUE v ON e.venue_id = v.venue_id
+JOIN ORGANIZER o ON e.organizer_id = o.organizer_id;
+GO
+
 -- ============================================================
 -- Verify views exist
 -- ============================================================
 SELECT name FROM sys.views WHERE name IN (
     'v_ActiveEvents', 'v_EventSales', 'v_AttendeeHistory', 
-    'v_VenueUtilization', 'v_ValidTickets'
+    'v_VenueUtilization', 'v_ValidTickets', 'EventSummary'
 );
 GO
